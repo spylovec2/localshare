@@ -61,9 +61,11 @@ pip install -r requirements.txt
 python localshare.py
 ```
 
-## ▶️ OR directly install LocalShare.deb file
+## ▶️ OR create and install LocalShare.deb file
 
 ```bash
+chmod +x build_deb.sh
+./build_deb.sh
 sudo dpkg -i LocalShare.deb
 ```
 
