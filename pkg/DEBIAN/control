@@ -1,0 +1,7 @@
+Package: LocalShare
+Version: 3.3
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: spy <spy@local>
+Description: LocalShare with fixed build dependencies.

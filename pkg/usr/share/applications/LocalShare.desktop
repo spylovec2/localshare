@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+# Use 'sh -c' to launch, which helps some window managers handle focus better
+Exec=sh -c "/usr/bin/LocalShare"
+Name=LocalShare
+Comment=LocalShare Server (Close terminal to stop)
+Icon=LocalShare
+Categories=Utility;Network;
+StartupNotify=true

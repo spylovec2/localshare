@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalDrop Pro</title>
+    <style>
+        /* Mobile-First Responsive Design */
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            background: #f0f2f5; 
+            min-height: 100vh; 
+        }
+        .sidebar { 
+            background: #fff; 
+            padding: 20px; 
+            border-bottom: 1px solid #ddd; 
+            text-align: center; 
+        }
+        .main { 
+            flex: 1; 
+            padding: 20px; 
+            box-sizing: border-box;
+        }
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Desktop Layout Override */
+        @media (min-width: 768px) {
+            body { flex-direction: row; }
+            .sidebar { 
+                width: 280px; 
+                border-bottom: none; 
+                border-right: 1px solid #ddd; 
+                height: 100vh; 
+                position: sticky;
+                top: 0;
+            }
+            .main { padding: 40px; }
+        }
+
+        #progressBar { width: 100%; height: 12px; display: none; margin: 15px 0; border-radius: 6px; }
+        ul { list-style: none; padding: 0; }
+        li { 
+            background: #fff; 
+            margin-bottom: 10px; 
+            padding: 12px; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border: 1px solid #eee; 
+            word-break: break-all;
+        }
+        .btn { 
+            background: #007bff; color: white; padding: 14px; border: none; 
+            border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; font-size: 1rem;
+        }
+        .qr-img { width: 180px; height: 180px; margin-top: 10px; border: 1px solid #eee; border-radius: 12px; }
+        input[type="file"] { margin-bottom: 15px; width: 100%; }
+        .status-text { text-align:center; font-size: 0.9em; margin-top: 10px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h3>Scan to Join</h3>
+        <img src="/qr" class="qr-img">
+        <p id="displayUrl" style="font-size: 0.9rem; color: #666; font-weight: 500;">Loading...</p>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <h2>📦 LocalDrop</h2>
+            <input type="file" id="filePicker" multiple>
+            <button class="btn" onclick="uploadFiles()">Upload Files</button>
+            <progress id="progressBar" value="0" max="100"></progress>
+            <p id="status" class="status-text"></p>
+            
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <h3>📥 Shared Files</h3>
+            <ul id="fileList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Fetch URL and IP from server
+        async function loadConfig() {
+            const res = await fetch('/config');
+            const data = await res.json();
+            document.getElementById('displayUrl').innerText = data.url;
+        }
+
+        async function refreshFileList() {
+            try {
+                const response = await fetch('/files');
+                const files = await response.json();
+                const list = document.getElementById('fileList');
+                list.innerHTML = files.map(f => `
+                    <li>
+                        <span>📄 ${f}</span>
+                        <div style="display: flex; gap: 15px;">
+                            <a href="/download/${encodeURIComponent(f)}" download style="text-decoration:none; color:#007bff; font-weight:bold;">Get</a>
+                            <button onclick="deleteFile('${f}')" style="color:#dc3545; border:none; background:none; cursor:pointer; font-weight:bold;">✕</button>
+                        </div>
+                    </li>
+                `).join('');
+            } catch (e) { console.error("Sync error"); }
+        }
+
+        async function deleteFile(name) {
+            if(confirm('Delete ' + name + '?')) {
+                await fetch('/delete/' + encodeURIComponent(name), {method: 'DELETE'});
+                refreshFileList();
+            }
+        }
+
+        function uploadFiles() {
+            const fileInput = document.getElementById('filePicker');
+            const files = fileInput.files;
+            if (files.length === 0) return;
+
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append("files", files[i]);
+            }
+
+            const xhr = new XMLHttpRequest();
+            const progress = document.getElementById('progressBar');
+            const status = document.getElementById('status');
+            
+            progress.style.display = 'block';
+            
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    progress.value = percent;
+                    status.innerText = `Uploading ${files.length} file(s): ${Math.round(percent)}%`;
+                }
+            };
+
+            xhr.onload = () => {
+                status.innerText = "✅ Successfully uploaded!";
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                    status.innerText = "";
+                    fileInput.value = "";
+                    refreshFileList();
+                }, 2000);
+            };
+
+            xhr.open("POST", "/upload");
+            xhr.send(formData);
+        }
+
+        // Initialize
+        loadConfig();
+        refreshFileList();
+        setInterval(refreshFileList, 3000);
+    </script>
+</body>
+</html>
