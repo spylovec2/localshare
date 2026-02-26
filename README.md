@@ -75,12 +75,6 @@ Open in your browser:
 http://localhost:8080
 ```
 
-Interactive API documentation:
-
-```
-http://localhost:8000/docs
-```
-
 ---
 
 ## 📂 Usage
@@ -90,13 +84,13 @@ http://localhost:8000/docs
 - Access from other devices using your local IP:
 
 ```
-http://YOUR_LOCAL_IP:8000
+http://YOUR_LOCAL_IP:8080
 ```
 
 Example:
 
 ```
-http://192.168.1.10:8000
+http://192.168.1.10:8080
 ```
 
 ---
